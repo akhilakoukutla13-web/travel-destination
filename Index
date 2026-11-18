@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My Travel Diary</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <style>
+    :root { --accent: #0e7c66; --bg: #faf8f4; --card: #fff; --text: #222; --muted: #666; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; }
+    header { background: var(--accent); color: #fff; padding: 32px 16px; text-align: center; }
+    header h1 { margin: 0; font-size: 2rem; }
+    header p { margin: 6px 0 0; opacity: .9; }
+    main { max-width: 960px; margin: auto; padding: 16px; }
+    #map { height: 420px; border-radius: 12px; margin: 16px 0 32px; box-shadow: 0 2px 8px rgba(0,0,0,.1); }
+    .place { background: var(--card); border-radius: 12px; padding: 20px; margin-bottom: 28px; box-shadow: 0 2px 8px rgba(0,0,0,.06); scroll-margin-top: 16px; }
+    .place h2 { margin: 0 0 4px; }
+    .place .meta { color: var(--muted); margin: 0 0 12px; }
+    .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; margin: 12px 0; }
+    .gallery img { width: 100%; height: 180px; object-fit: cover; border-radius: 8px; cursor: zoom-in; }
+    .video { width: 100%; aspect-ratio: 16/9; border: 0; border-radius: 8px; margin: 8px 0; }
+    .reach { background: #f1f7f5; border-radius: 8px; padding: 12px 16px; margin-top: 12px; }
+    .reach h3 { margin: 0 0 6px; font-size: 1.05rem; }
+    .reach ul { margin: 0; padding-left: 20px; }
+    .btn { display: inline-block; margin-top: 10px; background: var(--accent); color: #fff; padding: 8px 14px; border-radius: 6px; text-decoration: none; }
+    #lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.9); align-items: center; justify-content: center; z-index: 9999; cursor: zoom-out; }
+    #lightbox img { max-width: 95%; max-height: 95%; }
+    footer { text-align: center; color: var(--muted); padding: 24px; font-size: .9rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>My Travel Diary 🌍</h1>
+    <p>Places I've been, with photos, videos and how to get there</p>
+  </header>
+
+  <main>
+    <div id="map"></div>
+    <div id="places"></div>
+  </main>
+
+  <div id="lightbox"><img alt=""></div>
+  <footer>Made with ❤️ on GitHub Pages</footer>
+
+  <script>
+    /* ============================================================
+       ✏️ EDIT ONLY THIS LIST. One { ... } block = one place.
+       To add a place: copy a whole block, paste it below, change the details.
+       - photos: file paths inside your repo (e.g. photos/goa/1.jpg)
+       - videos: YouTube video IDs (the part after "v=" in the link)
+       - lat / lng: right-click the spot in Google Maps and copy the numbers
+       ============================================================ */
+    const PLACES = [
+      {
+        name: "Palolem Beach, Goa",
+        date: "March 2026",
+        about: "Calm beach with clear water, kayaking and great sunsets.",
+        lat: 15.0100, lng: 74.0232,
+        photos: ["photos/goa/1.jpg", "photos/goa/2.jpg", "photos/goa/3.jpg"],
+        videos: ["YOUR_VIDEO_ID"],
+        howToReach: [
+          "✈️ Nearest airport: Goa Dabolim (GOI), ~70 km",
+          "🚆 Nearest train station: Canacona, 3 km",
+          "🚕 Taxi from airport: ~1.5 hrs",
+          "🗓️ Best time: November to February"
+        ]
+      },
+      {
+        name: "Second place (example)",
+        date: "Month Year",
+        about: "Write one or two lines about this place.",
+        lat: 32.2432, lng: 77.1892,
+        photos: ["photos/place2/1.jpg"],
+        videos: [],
+        howToReach: [
+          "✈️ Nearest airport: ...",
+          "🚌 Bus: ...",
+          "💰 Entry fee: ..."
+        ]
+      }
+    ];
+
+    /* ---------- No need to edit below this line ---------- */
+    const map = L.map('map').setView([20.6, 78.9], 4);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    const container = document.getElementById('places');
+    const bounds = [];
+
+    PLACES.forEach((p, i) => {
+      const id = 'place-' + i;
+      const directions = `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}`;
+
+      const section = document.createElement('section');
+      section.className = 'place';
+      section.id = id;
+      section.innerHTML = `
+        <h2>${p.name}</h2>
+        <p class="meta">${p.date || ''}</p>
+        <p>${p.about || ''}</p>
+        <div class="gallery">${(p.photos || []).map(src => `<img src="${src}" alt="${p.name}" loading="lazy">`).join('')}</div>
+        ${(p.videos || []).map(v => `<iframe class="video" src="https://www.youtube.com/embed/${v}" allowfullscreen></iframe>`).join('')}
+        <div class="reach">
+          <h3>🧭 How to reach</h3>
+          <ul>${(p.howToReach || []).map(t => `<li>${t}</li>`).join('')}</ul>
+          <a class="btn" href="${directions}" target="_blank" rel="noopener">📍 Get directions</a>
+        </div>`;
+      container.appendChild(section);
+
+      L.marker([p.lat, p.lng]).addTo(map)
+        .bindPopup(`<b>${p.name}</b><br><a href="#${id}">See photos ↓</a>`);
+      bounds.push([p.lat, p.lng]);
+    });
+
+    if (bounds.length) map.fitBounds(bounds, { padding: [40, 40], maxZoom: 8 });
+
+    // Click a photo to see it big
+    const lb = document.getElementById('lightbox');
+    document.addEventListener('click', e => {
+      if (e.target.matches('.gallery img')) { lb.querySelector('img').src = e.target.src; lb.style.display = 'flex'; }
+      else if (e.target.closest('#lightbox')) lb.style.display = 'none';
+    });
+  </script>
+</body>
+</html>
